@@ -13,7 +13,7 @@
     "prepublishOnly": "npm run ci"
   },
   "main": "dist/index.js",
-  "description": "A demo npm package by Ali Azlan",
+  "description": "Translate complex search queries from PubMed or Ovid MEDLINE",
   "keywords": [
     "demo",
     "typescript",
@@ -40,8 +40,5 @@
     "prettier": "^3.3.3",
     "typescript": "^5.5.4",
     "vitest": "^2.0.5"
-  },
-  "dependencies": {
-    "lodash": "^4.17.21"
   }
 }

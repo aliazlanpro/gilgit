@@ -2,7 +2,6 @@
 
 import { parse } from './parser.js';
 import enginesImport from './engines.js';
-import _ from 'lodash';
 import generic from './generic.js';
 import fieldCodesObject from './data/field-codes-object.js';
 
@@ -22,7 +21,7 @@ export default gilgit = {
   translate: (query, engine, options?) => {
     var tree = parse(query, options);
     return gilgit.postProcess(
-      generic.compile(_.cloneDeep(tree), options, engine),
+      generic.compile(structuredClone(tree), options, engine),
       options,
     );
   },
@@ -41,7 +40,7 @@ export default gilgit = {
     const engines = Object.keys(fieldCodesObject);
     engines.forEach((engine) => {
       output[engine] = gilgit.postProcess(
-        generic.compile(_.cloneDeep(tree), options, engine),
+        generic.compile(structuredClone(tree), options, engine),
         options,
       );
     });
@@ -61,7 +60,7 @@ export default gilgit = {
    * @see parse()
    */
   preProcess: (tree, options) => {
-    var settings = _.defaults(options, {});
+    const settings = { ...options };
 
     // NOTE: THIS FUNCTION IS CURRENTLY ONLY A STUB
 
@@ -82,19 +81,19 @@ export default gilgit = {
    * @see parse()
    */
   postProcess: (text, options) => {
-    var settings = _.defaults(options, {
+    const settings = {
       forceString: true,
       html: true,
       highlighting: false,
       trim: false,
       transposeLines: true,
-    });
+      ...options,
+    };
 
-    if (settings.forceString && !_.isString(text))
+    if (settings.forceString && typeof text !== 'string')
       text = JSON.stringify(text, null, '\t');
 
     if (settings.highlighting) {
-      // Highlight logical operators purple
       text = text.replace(
         /(\sOR\s|\sAND\s|\sNOT\s)/g,
         (a, b) => `<font color="purple">${b}</font>`,
@@ -105,8 +104,7 @@ export default gilgit = {
       text = text
         .replace(/\n/g, '<br/>')
         .replace(/\t/g, '<span class="tab"></span>');
-    } else if (_.isString(text)) {
-      // Flatten HTML - Yes this is a horrible method, but its quick
+    } else if (typeof text === 'string') {
       for (var i = 0; i < 10; i++) {
         text = text.replace(/<(.+)(\s.*)>(.*)<\/\1>/g, '$3');
       }

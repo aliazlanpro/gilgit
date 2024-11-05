@@ -1,7 +1,6 @@
 // @ts-nocheck
 
 import tools from './tools.js';
-import _ from 'lodash';
 
 // Parsing Objects
 import fieldCodesParse from './data/field-codes-parse.js';
@@ -60,13 +59,16 @@ export const parse = (
     preserveNewlines?: boolean;
   },
 ): TreeNode[] => {
-  var settings = _.defaults(options, {
-    groupLines: false,
-    groupLinesAlways: false,
-    removeNumbering: false,
-    preserveNewlines: true,
-    transposeLines: true,
-  });
+  var settings = Object.assign(
+    {
+      groupLines: false,
+      groupLinesAlways: false,
+      removeNumbering: false,
+      preserveNewlines: true,
+      transposeLines: true,
+    },
+    options,
+  );
 
   // global.variables.no_field_tag = []; // Empty array of offsets each time the query is parsed
 
@@ -106,7 +108,7 @@ export const parse = (
     ) {
       // Wrap lines provided they are not blank and are not just 'and', 'or', 'not' by themselves or a comment
       lines = lines.map((line) =>
-        _.trim(line) &&
+        line.trim() &&
         !/^\s*(and|or|not)\s*$/i.test(line) &&
         !/^\s*#/.test(line)
           ? '(' + line + ')'
@@ -127,7 +129,7 @@ export const parse = (
   function trimLastLeaf() {
     if (
       leaf &&
-      _.includes(['phrase', 'raw'], leaf.type) &&
+      ['phrase', 'raw'].includes(leaf.type) &&
       / $/.test(leaf.content)
     ) {
       leaf.content = leaf.content.substr(0, leaf.content.length - 1);
@@ -199,7 +201,7 @@ export const parse = (
       // 1-7/OR
       branch.nodes.push({
         type: 'ref',
-        ref: _.range(match[1], (match[2] + 1) / 10),
+        ref: range(Number(match[1]), Number(match[2])),
         cond: match[3].toUpperCase(),
         nodes: [],
       });
@@ -212,7 +214,7 @@ export const parse = (
       // OR/1-7
       branch.nodes.push({
         type: 'ref',
-        ref: _.range(match[2], (match[3] + 1) / 10),
+        ref: range(Number(match[2]), Number(match[3])),
         cond: match[1].toUpperCase(),
         nodes: [],
       });
@@ -341,7 +343,7 @@ export const parse = (
       if (match[2])
         branch.nodes.push({
           type: 'joinNear',
-          proximity: _.toNumber(match[2]),
+          proximity: Number(match[2]),
         });
       else branch.nodes.push({ type: 'joinNear', proximity: 1 });
       leaf = undefined;
@@ -356,7 +358,7 @@ export const parse = (
       if (match[2])
         branch.nodes.push({
           type: 'joinNext',
-          proximity: _.toNumber(match[2]),
+          proximity: Number(match[2]),
         });
       else branch.nodes.push({ type: 'joinNext', proximity: 1 });
       leaf = undefined;
@@ -449,7 +451,7 @@ export const parse = (
     } else if ((match = /^\.(fs)\./i.exec(q))) {
       // Mesh subheading search - Ovid syntax
       var useLeaf;
-      if (_.isObject(leaf) && 'type' in leaf && leaf.type === 'phrase') {
+      if (isObject(leaf) && 'type' in leaf && leaf.type === 'phrase') {
         useLeaf = leaf as Leaf;
       } else if (Array.isArray(leaf) && lastGroup) {
         useLeaf = lastGroup;
@@ -464,7 +466,7 @@ export const parse = (
     } else if ((match = /^\.(xm|sh)\./i.exec(q))) {
       // Mesh search (field codes) - Ovid syntax
       var useLeaf;
-      if (_.isObject(leaf) && 'type' in leaf && leaf.type === 'phrase') {
+      if (isObject(leaf) && 'type' in leaf && leaf.type === 'phrase') {
         useLeaf = leaf as Leaf;
       } else if (Array.isArray(leaf) && lastGroup) {
         useLeaf = lastGroup;
@@ -568,9 +570,9 @@ export const parse = (
       // Field specifier - PubMed syntax
       // Figure out the leaf to use (usually the last one) or the previously used group
       var useLeaf;
-      if (_.isObject(leaf) && leaf.type == 'phrase') {
+      if (isObject(leaf) && leaf.type == 'phrase') {
         useLeaf = leaf;
-      } else if (_.isArray(leaf) && lastGroup) {
+      } else if (Array.isArray(leaf) && lastGroup) {
         useLeaf = lastGroup;
       }
 
@@ -597,7 +599,7 @@ export const parse = (
     // }}}
     else {
       var nextChar = q.substr(0, 1);
-      if ((_.isUndefined(leaf) || _.isArray(leaf)) && nextChar != ' ') {
+      if ((leaf === undefined || Array.isArray(leaf)) && nextChar != ' ') {
         // Leaf pointing to array entity - probably not created fallback leaf to append to
         if (/^["“”]$/.test(nextChar) && (match = /^["“”](.*?)["“”]/.exec(q))) {
           // First character is a speachmark - slurp until we see the next one
@@ -618,7 +620,7 @@ export const parse = (
           leaf = { type: 'phrase', content: nextChar, offset: offset };
           branch.nodes.push(leaf);
         }
-      } else if (_.isObject(leaf) && leaf.type == 'phrase') {
+      } else if (isObject(leaf) && leaf.type == 'phrase') {
         leaf.content += nextChar;
       }
 
@@ -677,3 +679,11 @@ export const parse = (
 
   return tree.nodes;
 };
+
+function range(start: number, end: number): number[] {
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+}
+
+function isObject(value: any): boolean {
+  return value !== null && typeof value === 'object';
+}

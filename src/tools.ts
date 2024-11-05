@@ -1,5 +1,3 @@
-import _ from 'lodash';
-
 export type TreeNode = {
   type?: string;
   content?: string;
@@ -53,21 +51,19 @@ const tools = {
     types: string[] | null,
     callback: VisitCallback,
   ): Tree => {
-    const removals: string[][] = []; // Stack of removal paths we are performing when done
+    const removals: string[][] = [];
     const treeWalker = (tree: Tree, path: string[]) => {
       for (let i = 0; i < tree.length; i++) {
         const branch = tree[i];
         const nodePath = path.concat(i.toString());
 
-        // Fire callback if it matches
-        if (!types || (branch && _.includes(types, branch.type))) {
+        if (!types || (branch && types.includes(branch.type as string))) {
           if (branch) {
             var result = callback(branch, nodePath);
             if (result === 'DEL') removals.push(nodePath);
           }
         }
 
-        // Walk down nodes if its a group
         if (
           branch &&
           (branch.type == 'group' || branch.type == 'line') &&
@@ -80,16 +76,13 @@ const tools = {
 
     treeWalker(tree, []);
 
-    // Crop all items marked as removals
-    removals
-      .reverse() // Walk in reverse order so we don't screw up arrays
-      .forEach((path) => {
-        var nodeName = path.pop();
-        var parent = path.length ? _.get(tree, path) : tree;
-        if (parent && nodeName !== undefined) {
-          delete parent[nodeName];
-        }
-      });
+    removals.reverse().forEach((path) => {
+      var nodeName = path.pop();
+      var parent = path.length ? getNestedValue(tree, path) : tree;
+      if (parent && nodeName !== undefined) {
+        delete parent[nodeName];
+      }
+    });
 
     return tree;
   },
@@ -159,7 +152,6 @@ const tools = {
     for (let i = 0; i < words.length; i++) {
       if (wildcards.some((wildcard) => words[i]?.includes(wildcard))) {
         foundMatch = true;
-        // Add quotation marks to previous word/s if the previous word was not a match
         if (i - 1 > lastMatch) {
           words[lastMatch + 1] = highlighting
             ? '<font color="DarkBlue">"' + words[lastMatch + 1]
@@ -169,7 +161,6 @@ const tools = {
             : words[i - 1] + '"';
         }
         lastMatch = i;
-        // Check that there is a word before and it is not a wildcard word
         if (
           i > 0 &&
           !wildcards.some((wildcard) => words[i - 1]?.includes(wildcard))
@@ -178,7 +169,6 @@ const tools = {
             ? '<font color="purple">NEXT</font> ' + words[i]
             : 'NEXT ' + words[i];
         }
-        // Check that there is a word after
         if (i < words.length - 1) {
           words[i] = highlighting
             ? words[i] + ' <font color="purple">NEXT</font>'
@@ -186,7 +176,6 @@ const tools = {
         }
       }
     }
-    // Add quotation marks to word/s after the final match
     if (lastMatch + 1 < words.length) {
       words[lastMatch + 1] = highlighting
         ? '<font color="DarkBlue">"' + words[lastMatch + 1]
@@ -205,7 +194,6 @@ const tools = {
    * @return {string} Formatted number
    */
   printNumber(engine: string, ref: string): string {
-    // Get line number format for engine
     var number = ref;
     switch (engine) {
       case 'PubMed full':
@@ -248,10 +236,9 @@ const tools = {
     engine?: string,
     settings?: QuotePhraseSettings,
   ): string => {
-    var text = _.trimEnd(branch.content);
-    var space = /\s/.test(text);
+    var text = branch.content?.trimEnd();
+    var space = /\s/.test(text || '');
 
-    // Apply wildcard replacements
     if (settings?.replaceWildcards) {
       var replaceObj = {};
       switch (engine) {
@@ -282,9 +269,9 @@ const tools = {
           };
           break;
         case 'Ovid MEDLINE':
-          break; // Nothing needed
+          break;
         case 'Cochrane Library':
-          if (space) {
+          if (space && text) {
             text = tools.wildCardCochrane(text, settings.highlighting);
           }
           replaceObj = {
@@ -297,7 +284,7 @@ const tools = {
               : '?',
             '#': '?',
           };
-          return tools.multiReplace(text, replaceObj); // Return here to prevent duplicate quotes
+          return tools.multiReplace(text || '', replaceObj);
         case 'Embase (Elsevier)':
         case 'Web of Science':
         case 'WoS Advanced':
@@ -396,7 +383,7 @@ const tools = {
           };
           break;
       }
-      text = tools.multiReplace(text, replaceObj);
+      text = tools.multiReplace(text ?? '', replaceObj);
     }
 
     return engine == 'Embase (Elsevier)'
@@ -404,12 +391,12 @@ const tools = {
         ? settings?.highlighting
           ? "<font color='DarkBlue'>'" + text + "'</font>"
           : "'" + text + "'"
-        : text
+        : `${text}`
       : space
         ? settings?.highlighting
           ? '<font color="DarkBlue">"' + text + '"</font>'
           : '"' + text + '"'
-        : text;
+        : `${text}`;
   },
 
   /**
@@ -419,21 +406,15 @@ const tools = {
    * @returns {Object} The recombined tree
    */
   renestConditions: (tree: Tree): Tree => {
-    if (!_.isArray(tree)) return tree; // Not an array - skip
+    if (!Array.isArray(tree)) return tree;
 
-    // Transform arrays of the form: [X1, $or/$and, X2] => {$or/$and: [X1, X2]}
     return tree.reduce((res, branch, index, arr) => {
-      var firstKey = _(branch).keys().first();
+      var firstKey = Object.keys(branch)[0];
       if (firstKey == '$or' || firstKey == '$and') {
-        // Is a combinator
         var expression: Record<string, any[]> = {};
-        expression[firstKey] = [
-          res.pop(), // Right side is the last thing we added to the buffer
-          arr.splice(index + 1, 1)[0], // Left side is the next thing we're going to look at in the array
-        ];
+        expression[firstKey] = [res.pop(), arr.splice(index + 1, 1)[0]];
         (res as any[]).push(expression);
       } else {
-        // Unknown - just push to array and carry on processing
         (res as any[]).push(branch);
       }
 
@@ -454,52 +435,49 @@ const tools = {
    * {foo, joinOr, bar, joinOr, baz} => {joinOr: [foo, bar, baz]}
    */
   combineConditions: (tree: Tree, options?: ConditionCollapseOptions): Tree => {
-    var settings = _.defaults(options, {
-      depth: 10,
-    });
+    const settings = { depth: 10, ...options };
 
     let collapses: { key: string; path: (string | number)[] }[] = [];
     const traverseTree = (
       branch: Record<string, any>,
       path: (string | number)[] = [],
     ) => {
-      // Recurse into each tree node and make a bottom-up list of nodes we need to collapse
-      _.forEach(branch, (v, k) => {
-        // Use _.map if its an array and _.mapValues if we're examining an object
-        if (_.isObject(v)) {
-          var firstKey = _(branch).keys().first();
+      for (const k in branch) {
+        const v = branch[k];
+        if (typeof v === 'object' && v !== null) {
+          var firstKey = Object.keys(branch)[0];
           if (path.length > 1 && (firstKey == '$or' || firstKey == '$and')) {
-            // Mark for cleanup later (when we can do a bottom-up traversal)
-            var lastKey = _.findLast(
-              collapses,
-              (i) => i.key == '$and' || i.key == '$or',
-            ); // Collapse only identical keys
+            var lastKey = collapses
+              .reverse()
+              .find((i) => i.key == '$and' || i.key == '$or');
+            collapses.reverse();
             if (!lastKey || lastKey.key == firstKey) {
               collapses.push({ key: firstKey, path: path });
             }
           }
-          if (settings.depth && path.length > settings.depth) return; // Stop recursing after depth has been reached
+          if (settings.depth && path.length > settings.depth) continue;
           traverseTree(v, path.concat([k]));
         }
-      });
+      }
     };
     traverseTree(tree);
 
     collapses.forEach((collapse) => {
-      var parent = _.get(tree, collapse.path.slice(0, -1));
-      var child = _.get(tree, collapse.path.concat([collapse.key]));
+      var parent = getNestedValue(tree, collapse.path.slice(0, -1));
+      var child = getNestedValue(tree, collapse.path.concat([collapse.key]));
       if (!child || !parent || !parent.length) return;
       var child2 = parent[1];
 
       if (child2) child.push(child2);
 
-      // Wrap $or conditions (that have an '$and' parent) in an object {{{
-      var lastParent = _(collapse.path).slice(0, -1).findLast(_.isString);
+      var lastParent = collapse.path
+        .slice(0, -1)
+        .reverse()
+        .find((item) => typeof item === 'string');
       if (lastParent && lastParent == '$and' && collapse.key == '$or')
         child = { $or: child };
-      // }}}
 
-      _.set(tree, collapse.path.slice(0, -1), child);
+      setNestedValue(tree, collapse.path.slice(0, -1), child);
     });
 
     return tree;
@@ -552,5 +530,22 @@ const tools = {
     );
   },
 };
+
+function getNestedValue(obj: any, path: (string | number)[]): any {
+  return path.reduce(
+    (current, key) =>
+      current && typeof current === 'object' ? current[key] : undefined,
+    obj,
+  );
+}
+
+function setNestedValue(obj: any, path: (string | number)[], value: any): void {
+  const lastKey = path.pop();
+  const target = path.reduce((current, key) => {
+    if (!(key in current)) current[key] = {};
+    return current[key];
+  }, obj);
+  if (lastKey !== undefined) target[lastKey] = value;
+}
 
 export default tools;

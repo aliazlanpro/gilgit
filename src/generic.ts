@@ -1,7 +1,6 @@
 // @ts-nocheck
 
 import tools from './tools.js';
-import _ from 'lodash';
 
 // Translation Objects
 import fieldCodesObject from './data/field-codes-object.js';
@@ -31,10 +30,13 @@ export default {
    * @return {string} The compiled output
    */
   compile: (tree, options, engine) => {
-    var settings = _.defaults(options, {
-      replaceWildcards: true,
-      testing: false,
-    });
+    var settings = Object.assign(
+      {
+        replaceWildcards: true,
+        testing: false,
+      },
+      options,
+    );
 
     var compileWalker = (tree) =>
       tree
