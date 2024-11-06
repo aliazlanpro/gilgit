@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import gilgit from '../index.js';
+import gilgit from '../src/index.js';
 
 describe('Translate adjacency searches (ADJ format)', () => {
   it('translate `term1 ADJ3 term2` -> PM `term1 AND term2`', () => {

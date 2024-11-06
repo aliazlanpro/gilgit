@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import gilgit from '../index.js';
+import gilgit from '../src/index.js';
 
 describe('Translate field groups (Ovid MEDLINE -> CINAHL)', () => {
   it('translate `(term1).tw.` -> CI `(TI term1 OR AB term1)`', () => {

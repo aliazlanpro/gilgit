@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import gilgit from '../index.js';
+import gilgit from '../src/index.js';
 
 /**
  * Collection of user-found bugs and edge cases

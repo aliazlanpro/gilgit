@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import gilgit from '../index.js';
+import gilgit from '../src/index.js';
 
 describe.skip('Translate searches (PubMed -> Mongo)', () => {
   const o = {

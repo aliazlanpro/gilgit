@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import gilgit from '../index.js';
+import gilgit from '../src/index.js';
 
 describe('Translate Mesh which appears later in search (Pubmed -> *)', () => {
   it('translate `Language[Majr]` -> OV `exp *Language/`', () => {

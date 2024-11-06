@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import gilgit from '../index.js';
+import gilgit from '../src/index.js';
 
 describe('Translate floating subheading searches (PubMed -> *)', () => {
   it('translate `term[sh]` -> PM `term[sh]`', () => {

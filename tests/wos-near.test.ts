@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import gilgit from '../index.js';
+import gilgit from '../src/index.js';
 
 describe('Translate adj3 to WOS (Ovid -> *)', () => {
   it('translate `(muscle$ adj3 resist$).ti,ab.` -> WoS `TI=(muscle? NEAR/3 resist?) OR AB=(muscle? NEAR/3 resist?)`', () => {
