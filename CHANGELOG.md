@@ -1,5 +1,11 @@
 # aliazlan
 
+## 0.3.0
+
+### Minor Changes
+
+- aa9508c: Reduced pacakag size
+
 ## 0.2.0
 
 ### Minor Changes
