@@ -1,1 +1,8 @@
-./dist/tests
+# Test files
+src/
+dist/tests/
+
+
+# Development files
+.prettierrc
+.changeset/
