@@ -1,5 +1,0 @@
----
-'gilgit': patch
----
-
-Refactor code

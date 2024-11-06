@@ -1,5 +1,11 @@
 # aliazlan
 
+## 0.2.3
+
+### Patch Changes
+
+- 7013bbc: Refactor code
+
 ## 0.3.0
 
 ### Minor Changes
