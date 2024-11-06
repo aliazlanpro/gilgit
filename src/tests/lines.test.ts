@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import gilgit from '../src/index.js';
+import gilgit from '../index.js';
 
 // FIXME: Not currently supported
 describe.skip('Line numbers', () => {

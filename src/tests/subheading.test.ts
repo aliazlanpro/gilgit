@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import gilgit from '../src/index.js';
+import gilgit from '../index.js';
 
 describe('Translate subheadings with or without quotes (Ovid -> *)', () => {
   it('translate `"abnormalities".fs.` -> CH `[mh /AB]`', () => {

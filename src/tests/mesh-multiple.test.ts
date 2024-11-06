@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import gilgit from '../src/index.js';
+import gilgit from '../index.js';
 
 describe('Translate multiple MESH terms (PubMed -> *)', () => {
   it('translate `"term1 term2"[Mesh]` -> PM `"term1 term2"[Mesh]`', () => {

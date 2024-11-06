@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import gilgit from '../src/index.js';
+import gilgit from '../index.js';
 
 describe('Dont expand ovid brackets (Ovid -> *)', () => {
   const translation =

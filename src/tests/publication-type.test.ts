@@ -1,5 +1,5 @@
 import { expect, describe, it } from 'vitest';
-import gilgit from '../src/index.js';
+import gilgit from '../index.js';
 
 describe('Translate publication type searches (PubMed -> *)', () => {
   it('translate `term[pt]` -> PM `term[pt]`', () => {
